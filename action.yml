@@ -1,0 +1,55 @@
+name: PR Throttler
+description: Throttle open pull requests per author based on merged PR count with configurable policy, exclusions, and messaging. Bot users are automatically excluded from enforcement.
+author: Your Name
+branding:
+  icon: filter
+  color: purple
+
+inputs:
+  policy:
+    description: JSON array of threshold rules mapping merged PR counts to allowed open PRs. Rules are sorted by minMerged ascending; the last rule with minMerged <= mergedCount applies. Gaps between rules are allowed. Example: [{"minMerged":0,"allowedOpen":1},{"minMerged":1,"allowedOpen":2},{"minMerged":3,"allowedOpen":3}]
+    required: true
+  closeComment:
+    description: Comment to post when closing a PR. Placeholders supported: {author}, {openCount}, {allowedOpen}, {mergedCount}
+    required: true
+  excludeUsers:
+    description: Comma-separated list or JSON array of GitHub usernames to exclude from throttling
+    required: false
+  excludeTeams:
+    description: Comma-separated list of org/team slugs to exclude (e.g., acme/maintainers,acme/admins)
+    required: false
+  countDrafts:
+    description: Whether draft PRs count toward open PRs
+    default: 'true'
+    required: false
+  skipOnFailure:
+    description: Skip enforcement (do not fail) if API calls or permissions fail
+    default: 'true'
+    required: false
+  revertToDraftOnReady:
+    description: When countDrafts=false and event is ready_for_review, revert the PR back to draft instead of closing if over the limit
+    default: 'true'
+    required: false
+  backToDraftComment:
+    description: Comment to post when reverting a PR back to draft on ready_for_review. Placeholders: {author}, {openCount}, {allowedOpen}, {mergedCount}
+    required: false
+  labelWhenClosed:
+    description: Optional label to add when PR is auto-closed
+    required: false
+  token:
+    description: GitHub token with permissions (pull-requests: write, issues: write, members: read for team checks). If not provided, falls back to GITHUB_TOKEN env.
+    required: false
+
+outputs:
+  decision:
+    description: Result of enforcement - ok | closed | skipped | reverted_to_draft
+  openCount:
+    description: Effective open PR count for the author (excluding current PR when applicable)
+  allowedOpen:
+    description: Allowed open PRs for the author based on policy
+  mergedCount:
+    description: Merged PR count for the author in this repository
+
+runs:
+  using: node20
+  main: dist/index.js

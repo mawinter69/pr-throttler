@@ -1,0 +1,40 @@
+name: PR Throttling (Sample)
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+jobs:
+  throttle:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      metadata: read
+      members: read  # only needed if excludeTeams is used
+    steps:
+      - name: Checkout repository (required for local action path)
+        uses: actions/checkout@v4
+
+      - name: Enforce PR throttling
+        # Use the local action in this repository
+        uses: ./
+        with:
+          policy: |
+            [
+              { "minMerged": 0, "allowedOpen": 1 },
+              { "minMerged": 1, "allowedOpen": 2 },
+              { "minMerged": 3, "allowedOpen": 3 }
+            ]
+          closeComment: |
+            Hi {author}, this repository limits open pull requests based on your merged PR history.
+            You currently have {openCount} open PR(s). Your limit is {allowedOpen}, given {mergedCount} merged PR(s).
+            Please focus on existing PRs before opening more. Thank you.
+          # Optional inputs:
+          # excludeUsers: "dependabot[bot],renovate[bot]"
+          # excludeTeams: "your-org/maintainers,your-org/admins"
+          # countDrafts: "true"
+          # skipOnFailure: "true"
+          # labelWhenClosed: "auto-closed: throttled"
+          # token: ${{ secrets.ORG_READ_TOKEN }} # needed if excludeTeams and GITHUB_TOKEN lacks read:org
