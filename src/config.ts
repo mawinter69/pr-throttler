@@ -10,6 +10,7 @@ export interface Inputs {
   closeComment: string;
   excludeUsers: string[];
   excludeTeams: string[]; // org/team-slug
+  excludeAuthorAssociations: string[]; // e.g., OWNER,MEMBER,COLLABORATOR
   countDrafts: boolean;
   skipOnFailure: boolean;
   revertToDraftOnReady: boolean;
@@ -46,6 +47,9 @@ export function parseInputs(): Inputs {
   const excludeTeamsRaw = core.getInput("excludeTeams") || "";
   const excludeTeams = parseListOrJsonArray(excludeTeamsRaw);
 
+  const excludeAuthorAssociationsRaw = core.getInput("excludeAuthorAssociations") || "OWNER,MEMBER,COLLABORATOR";
+  const excludeAuthorAssociations = parseListOrJsonArray(excludeAuthorAssociationsRaw).map((v) => v.toUpperCase());
+
   const countDraftsStr = core.getInput("countDrafts") || "true";
   const countDrafts = countDraftsStr.toLowerCase() === "true";
 
@@ -66,6 +70,7 @@ export function parseInputs(): Inputs {
     closeComment,
     excludeUsers,
     excludeTeams,
+    excludeAuthorAssociations,
     countDrafts,
     skipOnFailure,
     revertToDraftOnReady,

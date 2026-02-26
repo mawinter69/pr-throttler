@@ -49,6 +49,15 @@ async function run(): Promise<void> {
       return;
     }
 
+    // Exclude by author association
+    const assocRaw: string | undefined = pr.author_association;
+    const assoc = (assocRaw || "").toUpperCase();
+    if (assoc && inputs.excludeAuthorAssociations.includes(assoc)) {
+      core.info(`Author association ${assoc} is excluded. Skipping enforcement.`);
+      core.setOutput("decision", "skipped");
+      return;
+    }
+
     // Token and Octokit
     const token = inputs.token || process.env.GITHUB_TOKEN;
     if (!token) {

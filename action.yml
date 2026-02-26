@@ -18,6 +18,10 @@ inputs:
   excludeTeams:
     description: Comma-separated list of org/team slugs to exclude (e.g., acme/maintainers,acme/admins)
     required: false
+  excludeAuthorAssociations:
+    description: Comma-separated list or JSON array of PR author associations to exclude (e.g., OWNER,MEMBER,COLLABORATOR). Case-insensitive. Defaults to internal roles.
+    default: 'OWNER,MEMBER,COLLABORATOR'
+    required: false
   countDrafts:
     description: Whether draft PRs count toward open PRs
     default: 'true'
@@ -37,7 +41,7 @@ inputs:
     description: Optional label to add when PR is auto-closed
     required: false
   token:
-    description: GitHub token with permissions (pull-requests: write, issues: write, members: read for team checks). If not provided, falls back to GITHUB_TOKEN env.
+    description: GitHub token with permissions (pull-requests: write, issues: write). If using excludeTeams, the token must have read:org scope. If not provided, falls back to GITHUB_TOKEN env.
     required: false
 
 outputs:

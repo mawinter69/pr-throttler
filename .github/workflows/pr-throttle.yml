@@ -11,8 +11,6 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
-      metadata: read
-      members: read  # only needed if excludeTeams is used
     steps:
       - name: Checkout repository (required for local action path)
         uses: actions/checkout@v4

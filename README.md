@@ -9,6 +9,7 @@ Key features
 - Configurable whether draft PRs count towards open PRs
 - Bot users are automatically excluded from enforcement
 - Exclude users and org teams from enforcement
+- Exclude by author association (OWNER, MEMBER, COLLABORATOR excluded by default; configurable)
 - Optional label when auto-closing PRs
 - Skips enforcement (does not fail job) if permissions or API calls fail, if configured
 
@@ -16,8 +17,6 @@ Permissions required
 - pull-requests: write (to close PRs)
 - issues: write (to post comments and add labels)
 - contents: read
-- metadata: read
-- members: read (only if you use team-based exclusions)
 
 Inputs
 - policy (required): JSON array of threshold rules mapping merged PR counts to allowed open PRs.
@@ -39,7 +38,9 @@ Inputs
 
 - excludeUsers (optional): Comma-separated list or JSON array of usernames to exclude from enforcement. Bot users are auto-excluded by default; no need to list e.g., dependabot[bot] or renovate[bot].
 
-- excludeTeams (optional): Comma-separated list of org/team slugs to exclude (e.g., acme/maintainers,acme/admins). Requires a token with members: read scope.
+- excludeTeams (optional): Comma-separated list of org/team slugs to exclude (e.g., acme/maintainers,acme/admins). Requires a token with read:org scope for team checks.
+
+- excludeAuthorAssociations (optional; default "OWNER,MEMBER,COLLABORATOR"): Comma-separated list or JSON array of PR author associations to exclude from enforcement. Case-insensitive. Valid values include OWNER, MEMBER, COLLABORATOR, CONTRIBUTOR, FIRST_TIMER, FIRST_TIME_CONTRIBUTOR, MANNEQUIN, NONE.
 
 - countDrafts (optional; default "true"): Whether drafts count toward open PRs.
 
@@ -71,6 +72,7 @@ Draft PR handling
 Example workflow
 Place this in .github/workflows/pr-throttle.yml of the repository where you want enforcement:
 
+```yaml
 name: PR Throttling
 on:
   pull_request:
@@ -88,8 +90,6 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
-      metadata: read
-      members: read  # only required if using excludeTeams
     steps:
       - name: Enforce PR throttling
         uses: your-org/gh-action-pr-throttler@v1
@@ -105,6 +105,7 @@ jobs:
             You currently have {openCount} open PR(s). Your limit is {allowedOpen}, given {mergedCount} merged PR(s).
             Please focus on existing PRs before opening more. Thank you.
           excludeTeams: "acme/maintainers,acme/admins"
+          # excludeAuthorAssociations: "OWNER,MEMBER,COLLABORATOR" # defaults to these; customize if needed
           countDrafts: "true"
           skipOnFailure: "true"
           revertToDraftOnReady: "true"
@@ -112,6 +113,7 @@ jobs:
             Hi {author}, this PR was moved back to draft because your current open PRs ({openCount}) exceed the limit ({allowedOpen}). Please reduce your open PRs or wait until others are merged.
           labelWhenClosed: "auto-closed: throttled"
           # token: ${{ secrets.ORG_READ_TOKEN }} # optional; use if you need read:org for team checks
+```
 
 Notes on team exclusions
 - Team membership check uses GET /orgs/{org}/teams/{team_slug}/memberships/{username}

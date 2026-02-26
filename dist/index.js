@@ -29987,6 +29987,8 @@ function parseInputs() {
     const excludeUsers = parseListOrJsonArray(excludeUsersRaw);
     const excludeTeamsRaw = core.getInput("excludeTeams") || "";
     const excludeTeams = parseListOrJsonArray(excludeTeamsRaw);
+    const excludeAuthorAssociationsRaw = core.getInput("excludeAuthorAssociations") || "OWNER,MEMBER,COLLABORATOR";
+    const excludeAuthorAssociations = parseListOrJsonArray(excludeAuthorAssociationsRaw).map((v) => v.toUpperCase());
     const countDraftsStr = core.getInput("countDrafts") || "true";
     const countDrafts = countDraftsStr.toLowerCase() === "true";
     const skipOnFailureStr = core.getInput("skipOnFailure") || "true";
@@ -30001,6 +30003,7 @@ function parseInputs() {
         closeComment,
         excludeUsers,
         excludeTeams,
+        excludeAuthorAssociations,
         countDrafts,
         skipOnFailure,
         revertToDraftOnReady,
@@ -30257,6 +30260,14 @@ async function run() {
         const isBotUser = (authorType && authorType.toLowerCase() === "bot") || /\[bot\]$/i.test(author);
         if (isBotUser) {
             core.info(`Author ${author} detected as bot (type=${authorType}). Skipping enforcement.`);
+            core.setOutput("decision", "skipped");
+            return;
+        }
+        // Exclude by author association
+        const assocRaw = pr.author_association;
+        const assoc = (assocRaw || "").toUpperCase();
+        if (assoc && inputs.excludeAuthorAssociations.includes(assoc)) {
+            core.info(`Author association ${assoc} is excluded. Skipping enforcement.`);
             core.setOutput("decision", "skipped");
             return;
         }
